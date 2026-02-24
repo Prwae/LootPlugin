@@ -1,0 +1,24 @@
+{
+  "military_box": {
+    "pools": [
+      {
+        "rolls": 3,
+        "entries": [
+          {"id": "minecraft:iron_ingot", "weight": 50, "min": 2, "max": 5},
+          {"id": "minecraft:diamond", "weight": 10, "min": 1, "max": 2}
+        ]
+      }
+    ]
+  },
+  "supply_box": {
+    "pools": [
+      {
+        "rolls": 5,
+        "entries": [
+          {"id": "minecraft:bread", "weight": 100, "min": 3, "max": 8},
+          {"id": "minecraft:apple", "weight": 50, "min": 1, "max": 5}
+        ]
+      }
+    ]
+  }
+}
