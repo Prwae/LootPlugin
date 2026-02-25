@@ -27,7 +27,6 @@ public class InteractListener implements Listener {
     private final NamespacedKey typeKey = new NamespacedKey(LootPlugin.getInstance(), "assigner_type");
     private final NamespacedKey kindKey = new NamespacedKey(LootPlugin.getInstance(), "tool_kind");
 
-    // --- BLOCK LOGIC (Fixes breaking modded blocks) ---
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockInteract(PlayerInteractEvent event) {
         ItemStack item = event.getItem();
@@ -40,16 +39,14 @@ public class InteractListener implements Listener {
         Block block = event.getClickedBlock();
         if (block == null) return;
 
-        // Cancel interaction immediately so it doesn't break or open ANY block
         event.setCancelled(true); 
 
         if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             boolean isLeftClick = (event.getAction() == Action.LEFT_CLICK_BLOCK);
-            handleMarking(event.getPlayer(), block.getLocation(), typeName, isLeftClick, true);
+            handleMarking(event.getPlayer(), block.getLocation(), typeName, isLeftClick, true, block.getBlockData().getAsString());
         }
     }
 
-    // Safety net for Hybrid servers that ignore InteractEvent cancellations
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
         ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
@@ -58,7 +55,6 @@ public class InteractListener implements Listener {
         }
     }
 
-    // --- FRAME LOGIC (Survival Punch) ---
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onFrameDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player) || !(event.getEntity() instanceof ItemFrame frame)) return;
@@ -71,10 +67,9 @@ public class InteractListener implements Listener {
         if (typeName == null || !"frame".equals(toolKind)) return;
 
         event.setCancelled(true); 
-        handleMarking(player, frame.getLocation().getBlock().getLocation(), typeName, true, false);
+        handleMarking(player, frame.getLocation().getBlock().getLocation(), typeName, true, false, null);
     }
 
-    // --- FRAME LOGIC (Creative Break - FIX) ---
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onFrameBreak(HangingBreakByEntityEvent event) {
         if (!(event.getRemover() instanceof Player player) || !(event.getEntity() instanceof ItemFrame frame)) return;
@@ -87,11 +82,9 @@ public class InteractListener implements Listener {
         if (typeName == null || !"frame".equals(toolKind)) return;
 
         event.setCancelled(true); 
-        // Added the missing handleMarking call here
-        handleMarking(player, frame.getLocation().getBlock().getLocation(), typeName, true, false);
+        handleMarking(player, frame.getLocation().getBlock().getLocation(), typeName, true, false, null);
     }
 
-    // --- FRAME LOGIC (RMB) ---
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onFrameRightClick(PlayerInteractEntityEvent event) {
         if (!(event.getRightClicked() instanceof ItemFrame frame)) return;
@@ -105,15 +98,15 @@ public class InteractListener implements Listener {
         if (typeName == null || !"frame".equals(toolKind)) return;
 
         event.setCancelled(true); 
-        handleMarking(player, frame.getLocation().getBlock().getLocation(), typeName, false, false);
+        handleMarking(player, frame.getLocation().getBlock().getLocation(), typeName, false, false, null);
     }
 
-    private void handleMarking(Player p, Location loc, String type, boolean isAdd, boolean isContainer) {
+    private void handleMarking(Player p, Location loc, String type, boolean isAdd, boolean isContainer, String blockData) {
         DataManager data = LootPlugin.getInstance().getDataManager();
         String locStr = loc.getWorld().getName() + "," + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();
         
         if (isAdd) {
-            if (isContainer) data.containers.put(locStr, type);
+            if (isContainer) data.containers.put(locStr, new DataManager.ContainerMark(type, blockData));
             else data.frames.put(locStr, type);
             sendAction(p, ChatColor.GREEN + "Marked -> " + type);
         } else {

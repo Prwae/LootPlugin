@@ -61,7 +61,11 @@ public class LootManager {
         return new ArrayList<>(frameTables.keySet());
     }
 
-public List<ItemStack> generateLoot(String type, boolean isFrame) {
+    public LootTable getContainerTable(String type) {
+        return containerTables.get(type);
+    }
+
+    public List<ItemStack> generateLoot(String type, boolean isFrame) {
         List<ItemStack> items = new ArrayList<>();
         LootTable table = isFrame ? frameTables.get(type) : containerTables.get(type);
         if (table == null) return items;
@@ -78,16 +82,14 @@ public List<ItemStack> generateLoot(String type, boolean isFrame) {
                     currentWeight += entry.weight;
                     if (roll < currentWeight) {
                         
-                        // 1. Try to find the material
                         Material mat = Material.matchMaterial(entry.id);
                         if (mat == null && entry.id.contains(":")) {
                             mat = Material.matchMaterial(entry.id.split(":")[1].toUpperCase());
                         }
 
-                        // 2. The Ghost Item Bypass for stubborn Forge mods
                         boolean isGhostItem = false;
                         if (mat == null) {
-                            mat = Material.BEDROCK; // Placeholder
+                            mat = Material.BEDROCK; 
                             isGhostItem = true;
                         }
 
@@ -124,7 +126,6 @@ public List<ItemStack> generateLoot(String type, boolean isFrame) {
                                     meta.getPersistentDataContainer().set(nbtKey, org.bukkit.persistence.PersistentDataType.STRING, entry.nbt);
                                 }
 
-                                // Attach the Forge ID to the Ghost Item
                                 if (isGhostItem) {
                                     NamespacedKey ghostKey = new NamespacedKey(LootPlugin.getInstance(), "ghost_id");
                                     meta.getPersistentDataContainer().set(ghostKey, org.bukkit.persistence.PersistentDataType.STRING, entry.id);

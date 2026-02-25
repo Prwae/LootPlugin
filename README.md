@@ -21,6 +21,7 @@ Permission: `lootpl.admin`
 
 ## Configuration Guide
 * `size`: Total slots in the container (e.g., 27). Required for distribution in modded blocks.
+* `spawnchance`: Chance for container to spawn. From `0.0` to `1.0`.
 * `pools`: Array of loot categories.
 * `rolls`: Number of items picked from a pool per generation.
 * `entries`: List of possible items.
@@ -32,6 +33,7 @@ Permission: `lootpl.admin`
 {
   "medical_crate": {
     "size": 9,
+    "spawnchance": 0.5,
     "pools": [
       {
         "rolls": 2,
@@ -150,6 +152,7 @@ Permission: `lootpl.admin`
 ## Руководство по конфигурации
 
 * `size`: Количество слотов в контейнере (например, 27). Нужно для разброса лута в модовых блоках.
+* `spawnchance`: Шанс контейнера заспавнится. Принимает значения `0.0` до `1.0`.
 * `pools`: Массив категорий лута.
 * `rolls`: Количество предметов, выбираемых из пула за одну генерацию.
 * `entries`: Список возможных предметов.
@@ -162,6 +165,7 @@ Permission: `lootpl.admin`
 {
   "medical_crate": {
     "size": 9,
+    "spawnchance": 0.5,
     "pools": [
       {
         "rolls": 2,

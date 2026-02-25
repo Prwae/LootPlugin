@@ -30,24 +30,33 @@ public class ParticleTask extends BukkitRunnable {
             String toolKind = item.getItemMeta().getPersistentDataContainer().get(kindKey, PersistentDataType.STRING);
             if (typeName == null || toolKind == null) continue;
 
-            Map<String, String> targetMap = toolKind.equals("container") ? data.containers : data.frames;
             String worldName = p.getLocation().getWorld().getName();
 
-            for (Map.Entry<String, String> entry : targetMap.entrySet()) {
-                if (!entry.getValue().equals(typeName)) continue;
-
-                String[] pts = entry.getKey().split(",");
-                if (!pts[0].equals(worldName)) continue;
-
-                int x = Integer.parseInt(pts[1]);
-                int y = Integer.parseInt(pts[2]);
-                int z = Integer.parseInt(pts[3]);
-                
-                if (Math.abs(p.getLocation().getBlockX() - x) > 50 || Math.abs(p.getLocation().getBlockZ() - z) > 50) continue;
-                
-                spawnBox(p, new Location(p.getWorld(), x, y, z), greenDust);
+            if (toolKind.equals("container")) {
+                for (Map.Entry<String, DataManager.ContainerMark> entry : data.containers.entrySet()) {
+                    if (!entry.getValue().type.equals(typeName)) continue;
+                    validateAndSpawnBox(p, entry.getKey(), worldName, greenDust);
+                }
+            } else {
+                for (Map.Entry<String, String> entry : data.frames.entrySet()) {
+                    if (!entry.getValue().equals(typeName)) continue;
+                    validateAndSpawnBox(p, entry.getKey(), worldName, greenDust);
+                }
             }
         }
+    }
+
+    private void validateAndSpawnBox(Player p, String locStr, String worldName, Particle.DustOptions dust) {
+        String[] pts = locStr.split(",");
+        if (!pts[0].equals(worldName)) return;
+
+        int x = Integer.parseInt(pts[1]);
+        int y = Integer.parseInt(pts[2]);
+        int z = Integer.parseInt(pts[3]);
+        
+        if (Math.abs(p.getLocation().getBlockX() - x) > 50 || Math.abs(p.getLocation().getBlockZ() - z) > 50) return;
+        
+        spawnBox(p, new Location(p.getWorld(), x, y, z), dust);
     }
 
     private void spawnBox(Player p, Location loc, Particle.DustOptions dust) {

@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class LootTable {
     public int size;
+    public double spawnchance = 1.0;
     public List<LootPool> pools;
 
     public static class LootPool {

@@ -97,7 +97,7 @@ public class LootCommand implements CommandExecutor, TabCompleter {
         DataManager data = LootPlugin.getInstance().getDataManager();
         LootManager loot = LootPlugin.getInstance().getLootManager();
 
-        List<Map.Entry<String, String>> containerQueue = new ArrayList<>(data.containers.entrySet());
+        List<Map.Entry<String, DataManager.ContainerMark>> containerQueue = new ArrayList<>(data.containers.entrySet());
         List<Map.Entry<String, String>> frameQueue = new ArrayList<>(data.frames.entrySet());
 
         int totalTasks = containerQueue.size() + frameQueue.size();
@@ -113,10 +113,23 @@ public class LootCommand implements CommandExecutor, TabCompleter {
             public void run() {
                 // --- Process Containers ---
                 for (int i = 0; i < 10 && !containerQueue.isEmpty(); i++) {
-                    Map.Entry<String, String> entry = containerQueue.remove(0);
+                    Map.Entry<String, DataManager.ContainerMark> entry = containerQueue.remove(0);
                     Location loc = parseLocation(entry.getKey());
+                    DataManager.ContainerMark mark = entry.getValue();
                     
                     if (loc != null && loc.getWorld().isChunkLoaded(loc.getBlockX() >> 4, loc.getBlockZ() >> 4)) {
+                        com.example.lootpl.models.LootTable table = loot.getContainerTable(mark.type);
+                        
+                        if (table != null) {
+                            if (ThreadLocalRandom.current().nextDouble() > table.spawnchance) {
+                                loc.getBlock().setType(Material.AIR);
+                                completedTasks++;
+                                continue; 
+                            } else {
+                                loc.getBlock().setBlockData(Bukkit.createBlockData(mark.blockData));
+                            }
+                        }
+
                         BlockState state = loc.getBlock().getState(); 
                         
                         if (state instanceof Container container) {
@@ -126,7 +139,7 @@ public class LootCommand implements CommandExecutor, TabCompleter {
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), clearCmd);
                         }
 
-                        List<ItemStack> items = loot.generateLoot(entry.getValue(), false);
+                        List<ItemStack> items = loot.generateLoot(mark.type, false);
                         if (!items.isEmpty()) {
                             
                             boolean containsGhost = false;
@@ -148,7 +161,7 @@ public class LootCommand implements CommandExecutor, TabCompleter {
                                     inv.setItem(emptySlots.remove(ThreadLocalRandom.current().nextInt(emptySlots.size())), item);
                                 }
                             } else {
-                                int customSize = loot.getContainerSize(entry.getValue());
+                                int customSize = loot.getContainerSize(mark.type);
                                 injectNbtLoot(loc, items, customSize);
                             }
                         }
@@ -171,7 +184,6 @@ public class LootCommand implements CommandExecutor, TabCompleter {
                                     NamespacedKey ghostKey = new NamespacedKey(LootPlugin.getInstance(), "ghost_id");
                                     NamespacedKey nbtKey = new NamespacedKey(LootPlugin.getInstance(), "raw_nbt");
 
-                                    // Check if it is a Forge Ghost Item
                                     if (item != null && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(ghostKey, PersistentDataType.STRING)) {
                                         
                                         String realId = item.getItemMeta().getPersistentDataContainer().get(ghostKey, PersistentDataType.STRING);
@@ -182,17 +194,14 @@ public class LootCommand implements CommandExecutor, TabCompleter {
                                             tagStr = ",tag:" + rawNbt;
                                         }
 
-                                        // Clear the frame first, turn it invisible
                                         frame.setItem(new ItemStack(Material.AIR));
                                         frame.setVisible(false);
 
-                                        // Inject the modded item using the entity UUID
                                         String uuid = frame.getUniqueId().toString();
                                         String entityCmd = String.format("data merge entity %s {Item:{id:\"%s\",Count:%db%s}}", uuid, realId, item.getAmount(), tagStr);
                                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), entityCmd);
 
                                     } else {
-                                        // Standard Bukkit API for Vanilla items
                                         frame.setItem(item);
                                         frame.setVisible(false);
                                     }
