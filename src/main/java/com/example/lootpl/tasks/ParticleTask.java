@@ -18,7 +18,8 @@ public class ParticleTask extends BukkitRunnable {
     @Override
     public void run() {
         DataManager data = LootPlugin.getInstance().getDataManager();
-        Particle.DustOptions greenDust = new Particle.DustOptions(Color.LIME, 1.5F);
+        // Reduced size from 1.5F to 0.6F for smaller, sharper particles
+        Particle.DustOptions greenDust = new Particle.DustOptions(Color.LIME, 0.6F);
         NamespacedKey typeKey = new NamespacedKey(LootPlugin.getInstance(), "assigner_type");
         NamespacedKey kindKey = new NamespacedKey(LootPlugin.getInstance(), "tool_kind");
 
@@ -56,11 +57,35 @@ public class ParticleTask extends BukkitRunnable {
         
         if (Math.abs(p.getLocation().getBlockX() - x) > 50 || Math.abs(p.getLocation().getBlockZ() - z) > 50) return;
         
-        spawnBox(p, new Location(p.getWorld(), x, y, z), dust);
+        spawnBoxOutline(p, x, y, z, dust);
     }
 
-    private void spawnBox(Player p, Location loc, Particle.DustOptions dust) {
-        Location center = loc.clone().add(0.5, 0.5, 0.5);
-        p.spawnParticle(Particle.REDSTONE, center, 8, 0.4, 0.4, 0.4, 0, dust);
+    private void spawnBoxOutline(Player p, int startX, int startY, int startZ, Particle.DustOptions dust) {
+        double[] offsets = {0.0, 0.25, 0.5, 0.75, 1.0}; // 5 points per edge
+
+        for (double d : offsets) {
+            // Bottom edges
+            spawnPoint(p, startX + d, startY, startZ, dust);
+            spawnPoint(p, startX, startY, startZ + d, dust);
+            spawnPoint(p, startX + 1, startY, startZ + d, dust);
+            spawnPoint(p, startX + d, startY, startZ + 1, dust);
+
+            // Top edges
+            spawnPoint(p, startX + d, startY + 1, startZ, dust);
+            spawnPoint(p, startX, startY + 1, startZ + d, dust);
+            spawnPoint(p, startX + 1, startY + 1, startZ + d, dust);
+            spawnPoint(p, startX + d, startY + 1, startZ + 1, dust);
+
+            // Vertical edges
+            spawnPoint(p, startX, startY + d, startZ, dust);
+            spawnPoint(p, startX + 1, startY + d, startZ, dust);
+            spawnPoint(p, startX, startY + d, startZ + 1, dust);
+            spawnPoint(p, startX + 1, startY + d, startZ + 1, dust);
+        }
+    }
+
+    private void spawnPoint(Player p, double x, double y, double z, Particle.DustOptions dust) {
+        // Count: 1, Offsets: 0, Speed: 0 -> Spawns exactly at the provided coordinate
+        p.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, 0, dust);
     }
 }
